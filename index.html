@@ -327,19 +327,6 @@
     // -------------------
 
     loadQuestion(); // Karışmış olan ilk soruyu yükler
-    // 1. Fonksiyon: Listeyi karıştırır
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
-// 2. İşlem: Sayfa yüklenince listeyi BİR KEZ karıştır
-shuffle(questionBank);
-
-// 3. İşlem: İlk soruyu başlat (currentQuestionIndex zaten 0 olarak tanımlı olmalı)
-loadQuestion();
 </script>
 
 </script>
