@@ -130,7 +130,7 @@
     <div id="game-area">
         <h1>AVIOQUIZ PRO</h1>
         <div class="progress-bar"><div id="progress-fill"></div></div>
-        <div id="question-counter">Soru: 1 / 100</div>
+        <div id="question-counter">Soru: 1 / 101</div>
         <div class="question-text" id="question">Soru yükleniyor...</div>
         <div class="options-grid" id="options">
             </div>
@@ -268,7 +268,7 @@ const audio = document.getElementById("bgMusic");
         canClick = true;
         const qData = questionBank[currentQuestionIndex];
         document.getElementById("question").innerText = qData.q;
-        document.getElementById("question-counter").innerText = `Soru: ${currentQuestionIndex + 1} / 100`;
+        document.getElementById("question-counter").innerText = `Soru: ${currentQuestionIndex + 1} / 101`;
         document.getElementById("next-btn").style.display = "none";
         
         const optionsDiv = document.getElementById("options");
@@ -283,7 +283,7 @@ const audio = document.getElementById("bgMusic");
             optionsDiv.appendChild(btn);
         });
 
-        document.getElementById("progress-fill").style.width = `${((currentQuestionIndex) / 100) * 100}%`;
+        document.getElementById("progress-fill").style.width = `${((currentQuestionIndex) / 101) * 100}%`;
     }
 
     function checkAnswer(btn, choice) {if (!musicStarted) {
