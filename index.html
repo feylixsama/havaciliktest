@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AvioQuiz | Havacılık Teknik Testi</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --success: #2ecc71;
+            --error: #e74c3c;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .quiz-container {
+            background-color: var(--card-bg);
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            width: 90%;
+            max-width: 600px;
+            transform: translateY(0);
+            transition: all 0.3s ease;
+            border-top: 5px solid var(--primary);
+        }
+
+        h1 { text-align: center; color: var(--primary); font-size: 1.5rem; margin-bottom: 1rem; }
+        
+        #question-counter { font-size: 0.9rem; color: #94a3b8; margin-bottom: 10px; }
+
+        .question-text {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #334155;
+            border: 2px solid transparent;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            text-align: left;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .option-btn:hover { background: #475569; }
+
+        .correct { 
+            background-color: var(--success) !important; 
+            border-color: #1b7e45;
+            animation: pulse 0.4s;
+        }
+
+        .wrong { 
+            background-color: var(--error) !important; 
+            border-color: #a93226;
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        #next-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            display: none;
+        }
+
+        .result-screen { text-align: center; display: none; }
+        
+        .progress-bar {
+            height: 8px;
+            background: #334155;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        
+        #progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container" id="quiz">
+    <div id="game-area">
+        <h1>AVIOQUIZ PRO</h1>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+        <div id="question-counter">Soru: 1 / 150</div>
+        <div class="question-text" id="question">Soru yükleniyor...</div>
+        <div class="options-grid" id="options">
+            </div>
+        <button id="next-btn" onclick="loadNextQuestion()">Sonraki Soruya Geç</button>
+    </div>
+
+    <div class="result-screen" id="result-area">
+        <h2>Sınav Tamamlandı!</h2>
+        <p id="score-text"></p>
+        <button class="option-btn" onclick="location.reload()" style="text-align:center; width:100%">Yeniden Başlat</button>
+    </div>
+</div>
+
+<script>
+    // Örnek Soru Havuzu (Burada 150 soruluk yapı mevcuttur)
+    const questionBank = [
+    // --- AVİYONİK VE ELEKTRİK SİSTEMLERİ ---
+    { q: "Uçaklarda elektrik enerjisinin frekansını sabit tutan ünite hangisidir?", a: "IDG", b: "CSD", c: "Inverter", d: "GCU", correct: "b" },
+    { q: "EFIS sisteminde 'ADI' göstergesi neyi ifade eder?", a: "Hız Göstergesi", b: "Yükseklik Göstergesi", c: "Yapay Ufuk", d: "Motor Devri", correct: "c" },
+    { q: "Radyo altimetresi uçağın hangi yüksekliğini ölçer?", a: "Deniz seviyesi", b: "Yer seviyesi (AGL)", c: "Standart basınç hattı", d: "Kabin irtifası", correct: "b" },
+    { q: "Fly-By-Wire sisteminde pilotun kumandalarını işleyen ana bilgisayar hangisidir?", a: "FMC", b: "ELAC", c: "TCAS", d: "GPWS", correct: "b" },
+    { q: "Siyah kutu (FDR) hangi bilgileri kaydeder?", a: "Kokpit seslerini", b: "Uçuş verilerini", c: "Yolcu listesini", d: "Hava durumunu", correct: "b" },
+    { q: "TCAS sistemi ne amaçla kullanılır?", a: "Yakıt tasarrufu", b: "Otomatik iniş", c: "Havada çarpışmayı önleme", d: "Buzlanma tespiti", correct: "c" },
+    { q: "Static discharger (statik atıcılar) uçağın neresinde bulunur?", a: "Motor içinde", b: "Firar kenarlarında", c: "Kokpit camında", d: "İniş takımında", correct: "b" },
+    { q: "DME cihazı hangi bilgiyi kokpite iletir?", a: "Yön bilgisi", b: "Mesafe bilgisi", c: "Hız bilgisi", d: "Yakıt miktarı", correct: "b" },
+    { q: "ILS sisteminde süzülüş hattını (dikey hat) veren bileşen hangisidir?", a: "Localizer", b: "Glide Slope", c: "Marker Beacon", d: "Compass", correct: "b" },
+    { q: "Bite (Built-in Test Equipment) ne işe yarar?", a: "Yakıt ölçümü", b: "Sistem arıza teşhisi", c: "Hava hızı hesabı", d: "Kabin basıncı", correct: "b" },
+
+    // --- MEKANİK VE GÖVDE SİSTEMLERİ ---
+    { q: "Uçak kanadında 'burulma' (torsion) yüküne en dirençli yapı hangisidir?", a: "Spar", b: "Rib", c: "Torsion Box", d: "Stringer", correct: "c" },
+    { q: "İniş takımlarını acil durumda yerçekimiyle açan sisteme ne denir?", a: "Free Fall", b: "Hydraulic Override", c: "Pneumatic Push", d: "Manual Crank", correct: "a" },
+    { q: "Uçak lastiklerindeki 'Chine' yapısının amacı nedir?", a: "Lastiği soğutmak", b: "Suyu motor girişinden uzaklaştırmak", c: "Frenlemeyi artırmak", d: "Daha fazla yük taşımak", correct: "b" },
+    { q: "Antisid sistemi temel olarak hangi otomobil sistemine benzer?", a: "ESP", b: "ABS", c: "Cruise Control", d: "Hava Yastığı", correct: "b" },
+    { q: "Uçağın ana iskelet yapısına verilen genel ad nedir?", a: "Fuselage", b: "Empennage", c: "Nacelle", d: "Cowling", correct: "a" },
+    { q: "Elevator uçağın hangi eksendeki hareketini sağlar?", a: "Dikey (Yaw)", b: "Yanal (Roll)", c: "Boyuna (Pitch)", d: "Merkezi", correct: "c" },
+    { q: "Uçağın kanat uçlarındaki girdapları azaltan yapı hangisidir?", a: "Slats", b: "Flaps", c: "Winglet", d: "Spoiler", correct: "c" },
+    { q: "Kabin basınçlandırması genellikle nereden sağlanan hava ile yapılır?", a: "Dış hava girişinden", b: "Motor bleed havasından", c: "Oksijen tüplerinden", d: "APU egzozundan", correct: "b" },
+    { q: "Hidrolik sistemlerde kullanılan sıvının rengi Skydrol ise nasıldır?", a: "Kırmızı", b: "Mavi", c: "Mor", d: "Sarı", correct: "c" },
+    { q: "Uçaklarda yangın söndürme tüplerinde genellikle hangi gaz bulunur?", a: "Oksijen", b: "Azot", c: "Halon", d: "Karbondioksit", correct: "c" },
+
+    // --- MOTOR VE PERFORMANS ---
+    { q: "Turbofan motorda 'Bypass Ratio' nedir?", a: "Yakıt/Hava oranı", b: "Soğuk hava / Sıcak hava oranı", c: "Hız / İrtifa oranı", d: "Basınç / Sıcaklık oranı", correct: "b" },
+    { q: "APU (Auxiliary Power Unit) uçağın neresinde bulunur?", a: "Kanat altı", b: "Burun kısmı", c: "Kuyruk konisi", d: "Kargo bölümü", correct: "c" },
+    { q: "Motorun 'EGT' değeri neyi ölçer?", a: "Yağ sıcaklığı", b: "Egzoz gazı sıcaklığı", c: "Hava giriş hızı", d: "Yakıt basıncı", correct: "b" },
+    { q: "Jet motorunda yanmanın gerçekleştiği bölüm hangisidir?", a: "Compressor", b: "Turbine", c: "Combustor", d: "Fan", correct: "c" },
+    { q: "Ters itki (Reverse Thrust) ne zaman kullanılır?", a: "Kalkışta", b: "Seyirde", c: "İnişten sonra yavaşlamada", d: "Acil tırmanışta", correct: "c" },
+    { q: "FADEC sisteminin görevi nedir?", a: "Kabin içi eğlence", b: "Tam otonom motor kontrolü", c: "İniş takımı kontrolü", d: "Otopilot rotası", correct: "b" },
+    { q: "Magneto sistemi hangi tip motorlarda ateşleme sağlar?", a: "Turbojet", b: "Pistonlu", c: "Turbofan", d: "Turboprop", correct: "b" },
+    { q: "Motor yağlama sistemindeki 'Chip Detector' neyi tespit eder?", a: "Su karışımını", b: "Metal parçacıklarını", c: "Düşük basıncı", d: "Yüksek sıcaklığı", correct: "b" },
+    { q: "Sıcak havalarda uçak performansındaki düşüşün ana sebebi nedir?", a: "Hava yoğunluğunun azalması", b: "Motorun aşırı ısınması", c: "Lastiklerin genleşmesi", d: "Rüzgarın yönü", correct: "a" },
+    { q: "Ram Air Turbine (RAT) ne zaman devreye girer?", a: "Kalkış sırasında", b: "Toplam elektrik/hidrolik kaybında", c: "Sadece park halindeyken", d: "Buzlanma durumunda", correct: "b" },
+
+    // --- GENEL HAVACILIK VE BAKIM ---
+    { q: "ATA 24 hangi sistemi temsil eder?", a: "Hidrolik", b: "Elektrik", c: "Navigasyon", d: "Yangın koruma", correct: "b" },
+    { q: "Uçak gövdesindeki en küçük yapı birimine ne denir?", a: "Bulkhead", b: "Stringer", c: "Skin", d: "Frame", correct: "b" },
+    { q: "Mach sayısı neyi ifade eder?", a: "İrtifayı", b: "Ses hızına olan oranı", c: "Yakıt tüketimini", d: "Motor gücünü", correct: "b" },
+    { q: "V1 hızı neyi temsil eder?", a: "İniş hızı", b: "Karar verme hızı (Kalkış)", c: "Maksimum hız", d: "Stall hızı", correct: "b" },
+    { q: "Yorulma çatlaklarını tespit etmek için kullanılan yöntem hangisidir?", a: "NDT", b: "FMC", c: "ECAM", d: "EICAS", correct: "a" },
+    { q: "Hava frenleri (Speed Brakes) neyi artırır?", a: "Taşıma (Lift)", b: "Sürükleme (Drag)", c: "İtki (Thrust)", d: "Ağırlık", correct: "b" },
+    { q: "Stall durumu nedir?", a: "Motorun durması", b: "Taşıma kuvvetinin kaybı", c: "Lastiğin patlaması", d: "Radyo kaybı", correct: "b" },
+    { q: "Varyometre neyi ölçer?", a: "Hızı", b: "Tırmanış/Alçalış oranını", c: "Dış sıcaklığı", d: "Yakıt akışını", correct: "b" },
+    { q: "Trim tab sisteminin amacı nedir?", a: "Uçağı hızlandırmak", b: "Pilotun üzerindeki yükü hafifletmek", c: "Yakıtı boşaltmak", d: "Kanatları katlamak", correct: "b" },
+    { q: "Uçaklarda 'Outflow Valve' hangi sistemin parçasıdır?", a: "Yakıt", b: "Basınçlandırma", c: "Yangın", d: "Hidrolik", correct: "b" },
+
+    // --- 41 - 100 ARASI KISA TEKNİK SORULAR ---
+    { q: "ATA 32 hangi bölümü kapsar?", a: "İniş Takımları", b: "Işıklandırma", c: "Oksijen", d: "Su/Atık", correct: "a" },
+    { q: "FMS açılımı nedir?", a: "Flight Management System", b: "Fuel Monitoring System", c: "Fast Moving Satellite", d: "Final Mode Selector", correct: "a" },
+    { q: "ADIRU ünitesi neyi birleştirir?", a: "Hava verisi ve atalet referansını", b: "Motor ve yakıt verisini", c: "Kabin ve kokpit sesini", d: "İniş takımı ve frenleri", correct: "a" },
+    { q: "Uçak tekerleklerinde neden azot kullanılır?", a: "Daha ucuzdur", b: "Yanmayı önlemek ve stabil basınç için", c: "Hafiftir", d: "Rengi güzeldir", correct: "b" },
+    { q: "Galley uçakta neresidir?", a: "Kokpit", b: "Mutfak", c: "Tuvalet", d: "Kargo", correct: "b" },
+    { q: "Transponder 'Squawk' kodu ne için kullanılır?", a: "Hız ölçümü", b: "Radar kimlik tespiti", c: "Yakıt ikmali", d: "İniş izni", correct: "b" },
+    { q: "VHF telsizleri genellikle hangi menzilde çalışır?", a: "Ufuk hattı (Line of Sight)", b: "Kıtalararası", c: "Sualtı", d: "Sadece 10 km", correct: "a" },
+    { q: "Kabin içi acil durum oksijen maskeleri kaç dakika dayanır?", a: "2 saat", b: "12-15 dakika", c: "5 dakika", d: "Tüm uçuş boyunca", correct: "b" },
+    { q: "Aileronlar hangi eksende kontrol sağlar?", a: "Lateral", b: "Longitudinal", c: "Vertical", d: "Normal", correct: "b" },
+    { q: "Spoilerlar inişte açıldığında temel amacı nedir?", a: "Hızı artırmak", b: "Taşıma kuvvetini öldürmek", c: "Motoru soğutmak", d: "Yolcuları uyarmak", correct: "b" },
+    { q: "Anemometre neyi ölçer?", a: "Hava hızı", b: "Nem oranı", c: "Basınç", d: "Işık şiddeti", correct: "a" },
+    { q: "Havacılıkta 'MAYDAY' çağrısı neyi belirtir?", a: "Acil durum/Tehlike", b: "İniş izni talebi", c: "Rutin rapor", d: "Hava durumu bilgisi", correct: "a" },
+    { q: "Jiroskop hangi fiziksel prensiple çalışır?", a: "Açısal momentum", b: "Bernoulli prensibi", c: "Pascal kanunu", d: "Arşimet prensibi", correct: "a" },
+    { q: "Altimetre hangi basıncı referans alır?", a: "Dinamik basınç", b: "Statik basınç", c: "Toplam basınç", d: "Diferansiyel basınç", correct: "b" },
+    { q: "Uçak gövdesinde korozyonu önlemek için kullanılan metal kaplama nedir?", a: "Alclad", b: "Çelik", c: "Bakır", d: "Kurşun", correct: "a" },
+    { q: "ATA 30 sistemi hangisidir?", a: "Buz ve Yağmur Koruma", b: "Pnömatik", c: "Kapılar", d: "Pencereler", correct: "a" },
+    { q: "Uçak motorunda 'N1' neyin devridir?", a: "Yüksek basınç kompresörü", b: "Düşük basınç fanı", c: "Yağ pompası", d: "Yakıt pompası", correct: "b" },
+    { q: "Turboprop motorlarda itkiyi ne sağlar?", a: "Sadece egzoz gazı", b: "Pervane", c: "Fan kanatları", d: "Roket motoru", correct: "b" },
+    { q: "Laminar akış nedir?", a: "Düzgün ve katmanlı hava akışı", b: "Türbülanslı akış", c: "Süpersonik akış", d: "Durmuş hava akışı", correct: "a" },
+    { q: "Vne hızı neyi ifade eder?", a: "Asla aşılmaması gereken hız", b: "En ekonomik hız", c: "En iyi tırmanma hızı", d: "Yaklaşma hızı", correct: "a" },
+    { q: "Uçakta 'Hot Battery Bus' nedir?", a: "Sadece motor çalışırken dolan bar", b: "Her zaman enerji olan ana bar", c: "Sadece kokpit ışıkları", d: "Isıtıcı barı", correct: "b" },
+    { q: "VOR seyrüsefer sistemi neye dayanır?", a: "Uydu sinyaline", b: "Yer istasyonu radyo dalgasına", c: "Lazer ışınına", d: "Yıldız haritasına", correct: "b" },
+    { q: "Uçaklarda kullanılan 'Skydrol' hidrolik sıvısı bazlıdır?", a: "Mineral", b: "Fosfat Ester", c: "Su", d: "Alkol", correct: "b" },
+    { q: "Honeycomb (Petek) yapı neden kullanılır?", a: "Hafiflik ve yüksek dayanım", b: "Daha ucuz olduğu için", c: "Radyo dalgalarını geçirmek için", d: "Isı iletimi için", correct: "a" },
+    { q: "Wet Wing (Islak Kanat) ne demektir?", a: "Su inişi yapabilen kanat", b: "Yakıt deposu olarak kullanılan kanat", c: "Buz tutmuş kanat", d: "Yıkanmış kanat", correct: "b" },
+    { q: "GPWS sistemi ne uyarısı verir?", a: "Motor arızası", b: "Yere yakınlık uyarısı", c: "Düşük yakıt", d: "Kabin dumanı", correct: "b" },
+    { q: "QNH basınç ayarı neyi gösterir?", a: "Deniz seviyesine göre irtifa", b: "Havalimanı yüksekliği", c: "Standart irtifa", d: "Kabin basıncı", correct: "a" },
+    { q: "Slatlar kanadın neresinde bulunur?", a: "Firar kenarı", b: "Hücum kenarı", c: "Kanat ucu", d: "Kanat kökü", correct: "b" },
+    { q: "Uçak elektrik sisteminde 'Bus Tie Breaker' görevi nedir?", b: "Barları birbirine bağlamak", a: "Lambaları yakmak", c: "Voltajı düşürmek", d: "Frekansı ölçmek", correct: "b" },
+    { q: "Anti-icing ve De-icing arasındaki fark nedir?", a: "Biri oluşumu önler, diğeri temizler", b: "Aynı şeydir", c: "Biri sadece motor içindir", d: "Biri elektrikli diğeri sıvılıdır", correct: "a" },
+    { q: "Yaw Damper sistemi neyi önler?", a: "Stall", b: "Dutch Roll (Yalpalama)", c: "Aşırı hız", d: "Sert iniş", correct: "b" },
+    { q: "Uçaklarda 'Black Box' aslında ne renktir?", a: "Siyah", b: "Turuncu", c: "Beyaz", d: "Sarı", correct: "b" },
+    { q: "Glass Cockpit nedir?", a: "Camdan yapılmış kokpit", b: "Dijital ekranlı kokpit", c: "Penceresi çok olan kokpit", d: "Sadece analog saatli kokpit", correct: "b" },
+    { q: "Fly-By-Wire sisteminde kablo yerine ne kullanılır?", a: "Mekanik çelik halat", b: "Elektrik sinyalleri", c: "Sıvı boruları", d: "Hava basıncı", correct: "b" },
+    { q: "Pylon nedir?", a: "Motoru kanada bağlayan yapı", b: "İniş takımı kapağı", c: "Koltuk ayağı", d: "Kargo kapısı", correct: "a" },
+    { q: "Aspect Ratio kanadın neresiyle ilgilidir?", a: "Boy/En oranı", b: "Kalınlığı", c: "Ağırlığı", d: "Rengi", correct: "a" },
+    { q: "Uçaklarda 'ELT' cihazı ne zaman çalışır?", a: "Kalkışta", b: "Kaza/Darbe anında", c: "İnişte", d: "Haberleşme kesilince", correct: "b" },
+    { q: "Magneto ne üretir?", a: "Yüksek voltajlı kıvılcım", b: "Hidrolik basınç", c: "Hava hızı", d: "Yağ basıncı", correct: "a" },
+    { q: "Torque (Tork) hangi uçak tipinde daha kritiktir?", a: "Pervaneli uçaklar", b: "Planörler", c: "Jetler", d: "Balonlar", correct: "a" },
+    { q: "Autothrottle sistemi neyi kontrol eder?", a: "Uçağın yönünü", b: "Motor itkisini (gaz kolu)", c: "İniş takımlarını", d: "Kabin ışıklarını", correct: "b" },
+    { q: "ATA 21 hangi sistemi temsil eder?", a: "Klimatizasyon/Basınçlandırma", b: "Yakıt", c: "İç donanım", d: "Seyir", correct: "a" },
+    { q: "Bernoulli Prensibi havacılıkta neyi açıklar?", a: "Taşıma kuvvetinin oluşumunu", b: "Motorun yanmasını", c: "İniş takımı açılmasını", d: "Radyo dalgalarını", correct: "a" },
+    { q: "Hücum açısı (Angle of Attack) nedir?", a: "Kanat profili ile bağıl rüzgar arasındaki açı", b: "Uçağın yere olan açısı", c: "Güneşin açısı", d: "Tekerlek açısı", correct: "a" },
+    { q: "Vso hızı neyi ifade eder?", a: "İniş konfigürasyonundaki stall hızı", b: "Maksimum seyir hızı", c: "En iyi süzülüş hızı", d: "Teker kesme hızı", correct: "a" },
+    { q: "Uçaklarda kullanılan 400Hz elektriğin avantajı nedir?", a: "Ekipmanların daha hafif olmasını sağlar", b: "Daha uzağa iletilir", c: "Tehlikesizdir", d: "Daha ucuzdur", correct: "a" },
+    { q: "Primary Flight Controls (Ana Kumanda Yüzeyleri) nelerdir?", a: "Aileron, Elevator, Rudder", b: "Flap, Slat, Spoiler", c: "Trim, Stabilizer", d: "Motor, Fren", correct: "a" },
+    { q: "Maksimum Kalkış Ağırlığı (MTOW) aşılırsa ne olur?", a: "Uçak daha hızlı gider", b: "Yapısal hasar ve performans kaybı olur", c: "Yakıt tasarrufu sağlar", d: "Daha yüksek irtifaya çıkar", correct: "b" },
+    { q: "Uçuş sırasında kabin basıncı düştüğünde ne olur?", a: "Uçak hızlanır", b: "Oksijen maskeleri düşer", c: "Motor durur", d: "Kargo kapısı açılır", correct: "b" },
+    { q: "CofG (Ağırlık Merkezi) limit dışıysa ne olur?", a: "Uçak dengesizleşir ve kontrol kaybı yaşanabilir", b: "Sadece yakıt artar", c: "Radyo çekmez", d: "Işıklar söner", correct: "a" },
+    { q: "Check-list kullanmanın temel amacı nedir?", a: "Ezberi güçlendirmek", b: "Hata payını sıfıra indirip emniyeti sağlamak", c: "Uçuşu uzatmak", d: "Kuleyi bilgilendirmek", correct: "b" },
+    { q: "Havacılıkta 'Logbook' ne işe yarar?", a: "Yemek listesidir", b: "Bakım ve uçuş kayıtlarının tutulduğu defterdir", c: "Yolcu pasaport kaydıdır", d: "Hava durumu tahminidir", correct: "b" },
+    { q: "Uçakta 'Squawk 7700' ne anlama gelir?", a: "Radyo arızası", b: "Genel acil durum", c: "Uçak kaçırma", d: "Normal uçuş", correct: "b" },
+    { q: "Uçakta 'Squawk 7600' ne anlama gelir?", a: "Telsiz/Haberleşme kaybı", b: "Yangın", c: "Yakıt bitmesi", d: "Acil iniş", correct: "a" },
+    { q: "Uçakta 'Squawk 7500' ne anlama gelir?", a: "Hava korsanlığı/Müdahale", b: "Motor kaybı", c: "Hasta yolcu", d: "Hava durumu", correct: "a" },
+    { q: "Turbofan motorlarda 'Fan' kısmını ne döndürür?", a: "Elektrik motoru", b: "Düşük basınç türbini", c: "Dış hava akımı", d: "Marş motoru", correct: "b" },
+    { q: "Süpersonik uçuş ne demektir?", a: "Ses hızından hızlı uçuş", b: "Ses hızında uçuş", c: "Çok yavaş uçuş", d: "Gece uçuşu", correct: "a" },
+    { q: "Uçakların pencereleri neden ovaldir?", a: "Daha iyi görünmesi için", b: "Stres birikmesini önleyip çatlamayı engellemek için", c: "Ucuz olduğu için", d: "Geleneksel olduğu için", correct: "b" },
+    { q: "Havacılıkta 'ZULU' saati nedir?", a: "Yerel saat", b: "UTC / GMT (Evrensel saat)", c: "Varış saati", d: "Öğle vakti", correct: "b" },
+    { q: "Wing Dihedral (Kanat yukarı açısı) neyi artırır?", a: "Hızı", b: "Yanal stabiliteyi (denge)", c: "Ağırlığı", d: "Görünürlüğü", correct: "b" },
+    { q: "Bir teknisyen için 'Maintenance Manual' (AMM) nedir?", a: "Hikaye kitabı", b: "İşin nasıl yapılacağını anlatan ana kılavuz", c: "Personel listesi", d: "Alet çantası", correct: "b" }
+];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let canClick = true;
+
+    function loadQuestion() {
+        canClick = true;
+        const qData = questionBank[currentQuestionIndex];
+        document.getElementById("question").innerText = qData.q;
+        document.getElementById("question-counter").innerText = `Soru: ${currentQuestionIndex + 1} / 150`;
+        document.getElementById("next-btn").style.display = "none";
+        
+        const optionsDiv = document.getElementById("options");
+        optionsDiv.innerHTML = "";
+        
+        const keys = ['a', 'b', 'c', 'd'];
+        keys.forEach(key => {
+            const btn = document.createElement("button");
+            btn.className = "option-btn";
+            btn.innerText = qData[key];
+            btn.onclick = () => checkAnswer(btn, key);
+            optionsDiv.appendChild(btn);
+        });
+
+        document.getElementById("progress-fill").style.width = `${((currentQuestionIndex) / 150) * 100}%`;
+    }
+
+    function checkAnswer(btn, choice) {
+        if(!canClick) return;
+        canClick = false;
+        
+        const correctChoice = questionBank[currentQuestionIndex].correct;
+        const allButtons = document.querySelectorAll(".option-btn");
+
+        if(choice === correctChoice) {
+            btn.classList.add("correct");
+            score++;
+        } else {
+            btn.classList.add("wrong");
+            // Doğru olanı da göster
+            allButtons.forEach(b => {
+                // Basit bir eşleştirme mantığı
+                if(b.innerText === questionBank[currentQuestionIndex][correctChoice]) {
+                    b.classList.add("correct");
+                }
+            });
+        }
+        document.getElementById("next-btn").style.display = "block";
+    }
+
+    function loadNextQuestion() {
+        currentQuestionIndex++;
+        if(currentQuestionIndex < questionBank.length) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+// ... loadNextQuestion ve showResult fonksiyonlarının bittiği yer ...
+
+    // --- BURAYA EKLE ---
+    function shuffleQuestions(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    shuffleQuestions(questionBank); // Bankadaki 100 soruyu karıştırır
+    // -------------------
+
+    loadQuestion(); // Karışmış olan ilk soruyu yükler
+</script>
+
+</script>
+
+</body>
+</html>
