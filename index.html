@@ -334,7 +334,7 @@ function checkAnswer(btn, choice) {
         audio.play().catch(e => console.log("Müzik başlatılamadı:", e));
         musicStarted = true;
     }
-    
+    document.getElementById("prev-btn").style.visibility = "hidden";
     if(!canClick) return;
     canClick = false;
     
