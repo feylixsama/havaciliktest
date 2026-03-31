@@ -267,48 +267,77 @@ const audio = document.getElementById("bgMusic");
     let canClick = true;
 
     function loadQuestion() {
-        canClick = true;
-        const qData = questionBank[currentQuestionIndex];
-        document.getElementById("question").innerText = qData.q;
-        document.getElementById("question-counter").innerText = `Soru: ${currentQuestionIndex + 1} / 100`;
-        document.getElementById("next-btn").style.display = "none";
-        
-        const optionsDiv = document.getElementById("options");
-        optionsDiv.innerHTML = "";
-        
-        const keys = ['a', 'b', 'c', 'd'];
-        keys.forEach(key => {
-            const btn = document.createElement("button");
-            btn.className = "option-btn";
-            btn.innerText = qData[key];
-            btn.onclick = () => checkAnswer(btn, key);
-            optionsDiv.appendChild(btn);
-        });
+    canClick = true;
+    const qData = questionBank[currentQuestionIndex];
+    document.getElementById("question").innerText = qData.q;
+    
+    // Soru sayacını dinamik yapıyoruz (101 veya 150 fark etmez)
+    document.getElementById("question-counter").innerText = `Soru: ${currentQuestionIndex + 1} / ${questionBank.length}`;
+    
+    // Butonların görünürlük ayarı
+    document.getElementById("next-btn").style.display = "none";
+    const prevBtn = document.getElementById("prev-btn");
+    
+    // Eğer ilk soruda değilsek 'Önceki Soru' butonu görünsün
+    if(prevBtn) {
+        prevBtn.style.display = currentQuestionIndex > 0 ? "block" : "none";
+    }
+
+    const optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+    
+    const keys = ['a', 'b', 'c', 'd'];
+    keys.forEach(key => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = qData[key];
+        btn.onclick = () => checkAnswer(btn, key);
+        optionsDiv.appendChild(btn);
+    });
+
+    // İlerleme çubuğunu soru sayısına göre orantılı doldurur
+    document.getElementById("progress-fill").style.width = `${((currentQuestionIndex + 1) / questionBank.length) * 100}%`;
+}
 
         document.getElementById("progress-fill").style.width = `${((currentQuestionIndex) / 100) * 100}%`;
     }
 
-    function checkAnswer(btn, choice) {if (!musicStarted) {
-    audio.play().catch(e => console.log("Müzik başlatılamadı:", e));
-    musicStarted = true;}
-        if(!canClick) return;
-        canClick = false;
-        
-        const correctChoice = questionBank[currentQuestionIndex].correct;
-        const allButtons = document.querySelectorAll(".option-btn");
+    function checkAnswer(btn, choice) {
+    if (!musicStarted) {
+        audio.play().catch(e => console.log("Müzik başlatılamadı:", e));
+        musicStarted = true;
+    }
+    
+    if(!canClick) return;
+    canClick = false;
+    
+    const currentQ = questionBank[currentQuestionIndex];
+    const correctChoice = currentQ.correct;
+    const allButtons = document.querySelectorAll(".option-btn");
 
-        if(choice === correctChoice) {
-            btn.classList.add("correct");
-            score++;
-        } else {
-            btn.classList.add("wrong");
-            // Doğru olanı da göster
-            allButtons.forEach(b => {
-                // Basit bir eşleştirme mantığı
-                if(b.innerText === questionBank[currentQuestionIndex][correctChoice]) {
-                    b.classList.add("correct");
-                }
-            });
+    // "all" ise veya şık doğruysa doğru kabul et
+    if(choice === correctChoice || correctChoice === "all") {
+        btn.classList.add("correct");
+        score++;
+    } else {
+        btn.classList.add("wrong");
+        // Yanlış tıklandığında doğru olanı göster
+        allButtons.forEach(b => {
+            if(b.innerText === currentQ[correctChoice]) {
+                b.classList.add("correct");
+            }
+        });
+    }
+    document.getElementById("next-btn").style.display = "block";
+}
+
+// Geri gitme fonksiyonunu da hemen altına ekleyebilirsin:
+function loadPrevQuestion() {
+    if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        loadQuestion();
+    }
+}
         }
         document.getElementById("next-btn").style.display = "block";
     }
