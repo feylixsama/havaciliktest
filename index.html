@@ -516,26 +516,15 @@ function checkPlateAnswer(btn, choice, correct) {
     nextBtn.style.display = "block";
     nextBtn.innerText = "Sonraki İle Geç";
     nextBtn.onclick = () => {
-        currentPlateIndex++; // Bir sonraki plakaya geç
-        
-        if (currentPlateIndex < 81) {
-            // Eğer hala 81 ile ulaşmadıysak plaka yüklemeye devam et
+        currentPlateIndex++;
+        if(currentPlateIndex < 81) {
             loadPlateQuestion();
         } else {
-            // 81 ilin tamamı bittiğinde
             alert(`Oyun Bitti! Toplam Puanın: ${plateScore}`);
-            
-            // Verileri sıfırla ki havacılık testine dönmesin
-            plateScore = 0;
-            currentPlateIndex = 0;
-            
-            // Şehirleri tekrar karıştır
-            cityData.sort(() => Math.random() - 0.5);
-            
-            // TEKRAR PLAKA OYUNUNU BAŞLAT (Burada reload() olmamalı!)
-            loadPlateQuestion();
+            location.reload();
         }
     };
+}
 </script>
 <button onclick="toggleGame()" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: rgba(30, 41, 59, 0.8); border: 1px solid var(--primary); color: white; border-radius: 8px; padding: 10px 15px; cursor: pointer; font-weight: bold;">
     🚗 Plaka Oyunu
