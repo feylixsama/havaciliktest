@@ -521,9 +521,16 @@ function checkPlateAnswer(btn, choice, correct) {
             loadPlateQuestion();
         else {
     alert(`Oyun Bitti! Toplam Puanın: ${plateScore}`);
-    isPlateGame = false; // Plaka oyun modundan çık
-    document.querySelector('h1').innerText = "06 EIT 451"; // Başlığı eski haline getir
-    loadQuestion(); // Havacılık sorularını tekrar yükle
+    
+    // Oyunu sıfırla ama plaka modunda kal
+    plateScore = 0;
+    currentPlateIndex = 0;
+    
+    // İlleri tekrar karıştır (yeni oyun hissi için)
+    cityData.sort(() => Math.random() - 0.5);
+    
+    // İlk soruyu tekrar yükle
+    loadPlateQuestion();
 }
     };
 }
