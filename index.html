@@ -519,19 +519,10 @@ function checkPlateAnswer(btn, choice, correct) {
         currentPlateIndex++;
         if(currentPlateIndex < 81) {
             loadPlateQuestion();
-        else {
-    alert(`Oyun Bitti! Toplam Puanın: ${plateScore}`);
-    
-    // Oyunu sıfırla ama plaka modunda kal
-    plateScore = 0;
-    currentPlateIndex = 0;
-    
-    // İlleri tekrar karıştır (yeni oyun hissi için)
-    cityData.sort(() => Math.random() - 0.5);
-    
-    // İlk soruyu tekrar yükle
-    loadPlateQuestion();
-}
+        } else {
+            alert(`Oyun Bitti! Toplam Puanın: ${plateScore}`);
+            location.reload();
+        }
     };
 }
 </script>
