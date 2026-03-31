@@ -294,14 +294,12 @@ const audio = document.getElementById("bgMusic");
         btn.onclick = () => checkAnswer(btn, key);
         optionsDiv.appendChild(btn);
     });
+}); // options döngüsünü bitirir
 
-    // İlerleme çubuğunu soru sayısına göre orantılı doldurur
-    document.getElementById("progress-fill").style.width = `${((currentQuestionIndex + 1) / questionBank.length) * 100}%`;
-}
-
-// 299. satırdaki genişlik kodundan sonra fonksiyonu bitiriyoruz
-    document.getElementById("progress-fill").style.width = `${((currentQuestionIndex + 1) / questionBank.length) * 100}%`;
-} // loadQuestion burada bitiyor
+    // İlerleme çubuğunu günceller
+    const progress = ((currentQuestionIndex + 1) / questionBank.length) * 100;
+    document.getElementById("progress-fill").style.width = progress + "%";
+} // loadQuestion fonksiyonunu burada bitirmiş oluyoruz
 
 function checkAnswer(btn, choice) {
     if (!musicStarted) {
