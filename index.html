@@ -327,13 +327,11 @@ function checkAnswer(btn, choice) {
     }
     document.getElementById("next-btn").style.display = "block";
 }
-
-function loadPrevQuestion() {
-    if (currentQuestionIndex > 0) {
-        currentQuestionIndex--;
-        loadQuestion();
+function checkAnswer(btn, choice) {
+    if (!musicStarted) {
+        audio.play().catch(e => console.log("Müzik başlatılamadı:", e));
+        musicStarted = true;
     }
-}
     
     if(!canClick) return;
     canClick = false;
@@ -342,13 +340,11 @@ function loadPrevQuestion() {
     const correctChoice = currentQ.correct;
     const allButtons = document.querySelectorAll(".option-btn");
 
-    // "all" ise veya şık doğruysa doğru kabul et
     if(choice === correctChoice || correctChoice === "all") {
         btn.classList.add("correct");
         score++;
     } else {
         btn.classList.add("wrong");
-        // Yanlış tıklandığında doğru olanı göster
         allButtons.forEach(b => {
             if(b.innerText === currentQ[correctChoice]) {
                 b.classList.add("correct");
@@ -358,17 +354,12 @@ function loadPrevQuestion() {
     document.getElementById("next-btn").style.display = "block";
 }
 
-// Geri gitme fonksiyonunu da hemen altına ekleyebilirsin:
 function loadPrevQuestion() {
     if (currentQuestionIndex > 0) {
         currentQuestionIndex--;
         loadQuestion();
     }
-}
-        }
-        document.getElementById("next-btn").style.display = "block";
-    }
-
+   } 
     function loadNextQuestion() {
         currentQuestionIndex++;
         if(currentQuestionIndex < questionBank.length) {
@@ -391,7 +382,6 @@ function loadPrevQuestion() {
     // -------------------
 
     loadQuestion(); // Karışmış olan ilk soruyu yükler
-</script>
 
 </script>
 
