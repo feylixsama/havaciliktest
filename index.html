@@ -280,11 +280,15 @@ const audio = document.getElementById("bgMusic");
     const prevBtn = document.getElementById("prev-btn");
     
     // Eğer ilk soruda değilsek 'Önceki Soru' butonu görünsün
-    if(prevBtn) {
-        // 284. satırdaki 'display' yerine 'visibility' kullanıyoruz
-prevBtn.style.visibility = currentQuestionIndex > 0 ? "visible" : "hidden";
+    // Yeni soru yüklendiğinde butonun durumunu ayarla
+if (prevBtn) {
+    if (currentQuestionIndex > 0) {
+        prevBtn.style.display = "block"; // Butonu sayfaya geri ekle
+        prevBtn.style.visibility = "visible";
+    } else {
+        prevBtn.style.display = "none"; // İlk sorudaysak gizle
     }
-
+}
     const optionsDiv = document.getElementById("options");
     optionsDiv.innerHTML = "";
     
