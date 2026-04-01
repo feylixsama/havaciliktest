@@ -402,46 +402,22 @@ function loadPrevQuestion() {
     // -------------------
 
     loadQuestion(); // Karışmış olan ilk soruyu yükler
-loadQuestion();
-
-const playlist = ["sarki1.mp3", "sarki2.mp3", "sarki3.mp3"]; 
-let currentSongIndex = 0;
-let isPlaying = false;
-let isMuted = false;    
-const audio = document.getElementById("bgMusic");
-
-// Sonra az önce verdiğim toggleMusic, nextMusic fonksiyonları...
-
-const playlist = ["sarki1.mp3", "sarki2.mp3", "sarki3.mp3"]; 
-let currentSongIndex = 0;
-let isPlaying = false;
-const audio = document.getElementById("bgMusic");
+let isMuted = false;
 
 function toggleMusic() {
+    const audio = document.getElementById("bgMusic");
     const btn = document.getElementById("music-toggle");
-    if (isPlaying) {
-        audio.pause();
+    
+    if (!isMuted) {
+        audio.muted = true;
         btn.innerText = "🔇";
+        btn.style.opacity = "0.5";
     } else {
-        audio.play();
+        audio.muted = false;
         btn.innerText = "🔊";
+        btn.style.opacity = "1";
     }
-    isPlaying = !isPlaying;
-}
-
-function nextMusic() {
-    currentSongIndex = (currentSongIndex + 1) % playlist.length;
-    changeSong();
-}
-
-function prevMusic() {
-    currentSongIndex = (currentSongIndex - 1 + playlist.length) % playlist.length;
-    changeSong();
-}
-
-function changeSong() {
-    audio.src = playlist[currentSongIndex];
-    if (isPlaying) audio.play();
+    isMuted = !isMuted;
 }
     // --- PLAKA OYUNU VERİLERİ VE MANTIĞI ---
 const cityData = [
@@ -553,11 +529,8 @@ function checkPlateAnswer(btn, choice, correct) {
 <button onclick="toggleGame()" style="position: fixed; top: 20px; left: 20px; z-index: 1000; background: rgba(30, 41, 59, 0.8); border: 1px solid var(--primary); color: white; border-radius: 8px; padding: 10px 15px; cursor: pointer; font-weight: bold;">
     🚗 Plaka Oyunu
 </button>    
-<div class="music-controls" style="position: fixed; top: 20px; right: 20px; z-index: 1000; display: flex; gap: 10px; background: rgba(30, 41, 59, 0.7); padding: 10px; border-radius: 50px;">
-    <button onclick="prevMusic()" style="background:none; border:none; cursor:pointer; font-size:1.5rem; color:white;">⏮️</button>
-    <button id="music-toggle" onclick="toggleMusic()" style="background:none; border:none; cursor:pointer; font-size:1.5rem; color:white;">🔊</button>
-    <button onclick="nextMusic()" style="background:none; border:none; cursor:pointer; font-size:1.5rem; color:white;">⏭️</button>
-</div>
+<button id="music-toggle" onclick="toggleMusic()" style="position: fixed; top: 20px; right: 20px; z-index: 1000; background: rgba(30, 41, 59, 0.8); border: 1px solid var(--primary); color: white; border-radius: 50%; width: 45px; height: 45px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+    🔊
 </button>
 </body>
 </html>
